@@ -1,17 +1,21 @@
-const jwt = require('jsonwebtoken');
+const express = require('express');
+const router = express.Router();
+const {
+  register,
+  login,
+  getMe,
+  updateProfile,
+  changePassword
+} = require('../controllers/authController');
+const { protect } = require('../middleware/auth');
 
-exports.generateToken = (userId, role) => {
-  return jwt.sign(
-    { userId, role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN }
-  );
-};
+// Public
+router.post('/register', register);
+router.post('/login', login);
 
-exports.verifyToken = (token) => {
-  try {
-    return jwt.verify(token, process.env.JWT_SECRET);
-  } catch (error) {
-    throw new Error('Invalid or expired token');
-  }
-};
+// Protected
+router.get('/me', protect, getMe);
+router.put('/profile', protect, updateProfile);
+router.put('/change-password', protect, changePassword);
+
+module.exports = router;

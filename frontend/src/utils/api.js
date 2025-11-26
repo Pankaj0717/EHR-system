@@ -47,4 +47,15 @@ export const qrAPI = {
   generate: () => api.get('/records/qr/generate')
 };
 
+// Doctor APIs
+export const doctorAPI = {
+  verifyQR: (qrData) => api.post('/doctor/verify-qr', { qrData }),
+  getPatientRecords: (patientId) => api.get(`/doctor/patient/${patientId}/records`),
+  addVisitNote: (data) => api.post('/doctor/visit-note', data),
+  getVisitNotes: () => api.get('/doctor/visit-notes'),
+  getPatientVisitNotes: (patientId) => api.get(`/doctor/patient/${patientId}/visit-notes`),
+  updateVisitNote: (id, data) => api.put(`/doctor/visit-note/${id}`, data),
+  deleteVisitNote: (id) => api.delete(`/doctor/visit-note/${id}`)
+};
+
 export default api;

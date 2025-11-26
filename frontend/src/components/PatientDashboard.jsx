@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Heart, Upload, FileText, QrCode, User, LogOut, Menu, X } from 'lucide-react';
+import { Heart, Upload, FileText, QrCode, User, LogOut, Menu, X, Stethoscope } from 'lucide-react'; // ADD Stethoscope
 import UploadRecords from './UploadRecords';
 import ViewRecords from './ViewRecords';
 import QRCodeSection from './QRCodeSection';
 import Profile from './Profile';
+import PatientVisitNotes from './PatientVisitNotes'; // ADD THIS IMPORT
 
 const PatientDashboard = () => {
   const navigate = useNavigate();
@@ -21,18 +22,20 @@ const PatientDashboard = () => {
   const tabs = [
     { id: 'records', label: 'My Records', icon: FileText },
     { id: 'upload', label: 'Upload', icon: Upload },
+    { id: 'visits', label: 'Visit Notes', icon: Stethoscope }, // ADD THIS LINE
     { id: 'qrcode', label: 'QR Code', icon: QrCode },
     { id: 'profile', label: 'Profile', icon: User }
   ];
 
   return (
     <div style={{ minHeight: '100vh', background: '#f3f4f6' }}>
-      {/* Header */}
+      {/* Header - keep as is */}
       <header style={{ 
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         padding: '16px 0',
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
       }}>
+        {/* ... existing header code ... */}
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button
@@ -84,7 +87,7 @@ const PatientDashboard = () => {
       </header>
 
       <div style={{ display: 'flex' }}>
-        {/* Sidebar */}
+        {/* Sidebar - keep as is but tabs array is updated above */}
         <aside style={{
           width: sidebarOpen ? '250px' : '0',
           background: 'white',
@@ -156,6 +159,7 @@ const PatientDashboard = () => {
           <div>
             {activeTab === 'records' && <ViewRecords />}
             {activeTab === 'upload' && <UploadRecords />}
+            {activeTab === 'visits' && <PatientVisitNotes />} {/* ADD THIS LINE */}
             {activeTab === 'qrcode' && <QRCodeSection />}
             {activeTab === 'profile' && <Profile />}
           </div>

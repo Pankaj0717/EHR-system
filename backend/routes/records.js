@@ -91,6 +91,51 @@ router.post('/upload', protect, upload.single('file'), async (req, res, next) =>
   }
 });
 
+// @desc    Get patient's own visit notes
+// @route   GET /api/records/visit-notes
+// @access  Private (Patient only)
+router.get('/visit-notes', protect, async (req, res, next) => {
+  try {
+    const VisitNote = require('../models/VisitNote');
+    
+    const visitNotes = await VisitNote.find({ patientId: req.user._id })
+      .populate('doctorId', 'name specialization hospitalName')
+      .sort({ visitDate: -1 });
+
+    res.json({
+      success: true,
+      count: visitNotes.length,
+      visitNotes
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Get QR code
+// @route   GET /api/records/qr/generate
+// @access  Private
+router.get('/qr/generate', protect, async (req, res, next) => {
+  try {
+    const qrData = {
+      userId: req.user._id,
+      name: req.user.name,
+      timestamp: Date.now(),
+      expiresIn: 30 * 60 * 1000 // 30 minutes
+    };
+
+    const qrCodeDataURL = await QRCode.toDataURL(JSON.stringify(qrData));
+
+    res.json({
+      success: true,
+      qrCode: qrCodeDataURL,
+      expiresAt: new Date(Date.now() + 30 * 60 * 1000)
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // @desc    Get all records for user
 // @route   GET /api/records
 // @access  Private
@@ -162,30 +207,6 @@ router.delete('/:id', protect, async (req, res, next) => {
     res.json({
       success: true,
       message: 'Record deleted successfully'
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// @desc    Generate QR code
-// @route   GET /api/records/qr/generate
-// @access  Private
-router.get('/qr/generate', protect, async (req, res, next) => {
-  try {
-    const qrData = {
-      userId: req.user._id,
-      name: req.user.name,
-      timestamp: Date.now(),
-      expiresIn: 30 * 60 * 1000 // 30 minutes
-    };
-
-    const qrCodeDataURL = await QRCode.toDataURL(JSON.stringify(qrData));
-
-    res.json({
-      success: true,
-      qrCode: qrCodeDataURL,
-      expiresAt: new Date(Date.now() + 30 * 60 * 1000)
     });
   } catch (error) {
     next(error);

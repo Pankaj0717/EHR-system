@@ -6,12 +6,12 @@ import Login from './components/Login';
 import Register from './components/Register';
 import DoctorLogin from './components/DoctorLogin';
 import DoctorRegister from './components/DoctorRegister';
-import PatientDashboard from './components/PatientDashboard';
 import DoctorDashboard from './components/DoctorDashboard';
+import PatientDashboard from './components/PatientDashboard';
 
 // Protected Route Component
-const ProtectedRoute = ({ children, allowedRole }) => {
-  const { isAuthenticated, loading, user } = useAuth();
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
   
   if (loading) {
     return (
@@ -43,15 +43,7 @@ const ProtectedRoute = ({ children, allowedRole }) => {
     );
   }
   
-  if (!isAuthenticated) {
-    return <Navigate to="/" />;
-  }
-
-  if (allowedRole && user?.role !== allowedRole) {
-    return <Navigate to="/" />;
-  }
-  
-  return children;
+  return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
 function App() {
@@ -68,26 +60,25 @@ function App() {
           {/* Doctor Routes */}
           <Route path="/doctor/login" element={<DoctorLogin />} />
           <Route path="/doctor/register" element={<DoctorRegister />} />
+          <Route 
+            path="/doctor/dashboard" 
+            element={
+              <ProtectedRoute>
+                <DoctorDashboard />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* Old routes redirect */}
           <Route path="/login" element={<Navigate to="/patient/login" />} />
           <Route path="/register" element={<Navigate to="/patient/register" />} />
           
-          {/* Dashboards */}
+          {/* Dashboard */}
           <Route 
             path="/dashboard" 
             element={
-              <ProtectedRoute allowedRole="patient">
+              <ProtectedRoute>
                 <PatientDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/doctor/dashboard" 
-            element={
-              <ProtectedRoute allowedRole="doctor">
-                <DoctorDashboard />
               </ProtectedRoute>
             } 
           />

@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
 const multer = require('multer');
-const cloudinary = require('../config/cloudinary'); // Import from config
+const cloudinary = require('../config/cloudinary');
 const MedicalRecord = require('../models/MedicalRecord');
 const QRCode = require('qrcode');
+const { analyzeMedicalRecord } = require('../utils/aiHelper'); // NEW: Import AI helper
 
 // Configure Multer for memory storage
 const storage = multer.memoryStorage();
@@ -23,7 +24,7 @@ const upload = multer({
   }
 });
 
-// @desc    Upload medical record
+// @desc    Upload medical record with AI analysis
 // @route   POST /api/records/upload
 // @access  Private
 router.post('/upload', protect, upload.single('file'), async (req, res, next) => {
@@ -75,18 +76,121 @@ router.post('/upload', protect, upload.single('file'), async (req, res, next) =>
       cloudinaryId: result.public_id,
       doctorName: req.body.doctorName,
       hospitalName: req.body.hospitalName,
-      recordDate: req.body.recordDate || Date.now()
+      recordDate: req.body.recordDate || Date.now(),
+      aiProcessed: false // Initially not processed
     });
 
     console.log('✅ Record saved successfully');
 
+    // 🤖 NEW: Trigger AI analysis asynchronously (don't wait for it)
+    // This allows the response to be sent immediately while AI processes in background
+    processAIAnalysis(record._id, {
+      title: record.title,
+      category: record.category,
+      description: record.description,
+      fileUrl: record.fileUrl,
+      doctorName: record.doctorName,
+      hospitalName: record.hospitalName
+    });
+
     res.status(201).json({
       success: true,
-      message: 'Record uploaded successfully',
+      message: 'Record uploaded successfully. AI analysis in progress...',
       record
     });
   } catch (error) {
     console.error('❌ Upload error:', error);
+    next(error);
+  }
+});
+
+// 🤖 NEW: AI Analysis Background Process
+async function processAIAnalysis(recordId, recordData) {
+  try {
+    console.log('🤖 Starting AI analysis for record:', recordId);
+    
+    // Call AI analysis
+    const aiResult = await analyzeMedicalRecord(recordData);
+    
+    // Update record with AI summary
+    await MedicalRecord.findByIdAndUpdate(recordId, {
+      aiSummary: aiResult.summary,
+      aiProcessed: true,
+      aiError: aiResult.success ? null : aiResult.error
+    });
+    
+    console.log('✅ AI analysis completed and saved for record:', recordId);
+  } catch (error) {
+    console.error('❌ AI analysis failed for record:', recordId, error);
+    
+    // Update record to mark AI processing failed
+    await MedicalRecord.findByIdAndUpdate(recordId, {
+      aiProcessed: true,
+      aiError: error.message
+    });
+  }
+}
+
+// 🤖 NEW: Get AI summary for a specific record
+// @route   GET /api/records/:id/ai-summary
+// @access  Private
+router.get('/:id/ai-summary', protect, async (req, res, next) => {
+  try {
+    const record = await MedicalRecord.findOne({
+      _id: req.params.id,
+      userId: req.user._id
+    });
+
+    if (!record) {
+      return res.status(404).json({
+        success: false,
+        message: 'Record not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      aiProcessed: record.aiProcessed,
+      aiSummary: record.aiSummary,
+      aiError: record.aiError
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 🤖 NEW: Manually trigger AI analysis for existing records
+// @route   POST /api/records/:id/analyze
+// @access  Private
+router.post('/:id/analyze', protect, async (req, res, next) => {
+  try {
+    const record = await MedicalRecord.findOne({
+      _id: req.params.id,
+      userId: req.user._id
+    });
+
+    if (!record) {
+      return res.status(404).json({
+        success: false,
+        message: 'Record not found'
+      });
+    }
+
+    // Trigger AI analysis
+    processAIAnalysis(record._id, {
+      title: record.title,
+      category: record.category,
+      description: record.description,
+      fileUrl: record.fileUrl,
+      doctorName: record.doctorName,
+      hospitalName: record.hospitalName
+    });
+
+    res.json({
+      success: true,
+      message: 'AI analysis started'
+    });
+  } catch (error) {
     next(error);
   }
 });

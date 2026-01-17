@@ -45,6 +45,18 @@ const medicalRecordSchema = new mongoose.Schema({
   recordDate: {
     type: Date,
     default: Date.now
+  },
+  aiSummary: {
+    type: Object,
+    default: null
+  },
+  aiProcessed: {
+    type: Boolean,
+    default: false
+  },
+  aiError: {
+    type: String,
+    default: null
   }
 }, {
   timestamps: true

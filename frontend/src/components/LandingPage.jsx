@@ -1,124 +1,234 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Shield, QrCode, FileText, User, Stethoscope, Zap, ArrowRight, Activity, Database } from 'lucide-react';
+import { Heart, Shield, QrCode, Sparkles, ArrowRight, FileText, Stethoscope } from 'lucide-react';
 
 const LandingPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', fontFamily: 'Inter, system-ui, sans-serif', color: '#1E293B' }}>
-      
-      {/* --- SLIM NAVIGATION --- */}
-      <nav style={{ padding: '20px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#FFFFFF', borderBottom: '1px solid #EDF2F7' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ background: '#10B981', padding: '6px', borderRadius: '8px' }}>
-            <Heart size={20} color="white" fill="white" />
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+      {/* Hero Section */}
+      <header style={{ padding: '80px 20px', color: 'white', textAlign: 'center' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
+            <Heart size={64} />
+            <h1 style={{ fontSize: '56px', fontWeight: '700', margin: 0 }}>
+              HealthVault
+            </h1>
           </div>
-          <span style={{ fontWeight: '800', fontSize: '22px', color: '#0F172A', letterSpacing: '-0.5px' }}>HealthVault</span>
-        </div>
-        <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-          <span style={{ fontSize: '14px', color: '#64748B', fontWeight: '500', cursor: 'pointer' }}></span>
-          <button onClick={() => navigate('/login')} style={{ background: '#0F172A', color: 'white', padding: '8px 20px', borderRadius: '6px', border: 'none', fontWeight: '600', cursor: 'pointer' }}>Sign In</button>
-        </div>
-      </nav>
-
-      {/* --- HERO SECTION --- */}
-      <header style={{ padding: '80px 40px 40px', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
-        <div style={promoBadge}><Zap size={14} /> Powered by AI Analysis</div>
-        <h1 style={{ fontSize: '56px', fontWeight: '900', color: '#0F172A', lineHeight: '1.1', marginBottom: '20px' }}>
-          Decentralized Medical <span style={{ color: '#10B981' }}>Intelligence.</span>
-        </h1>
-        <p style={{ fontSize: '19px', color: '#64748B', maxWidth: '700px', margin: '0 auto 50px', lineHeight: '1.6' }}>
-          A secure bridge between patients and healthcare providers. Store your records in the cloud, analyze them with AI, and share instantly via encrypted QR.
-        </p>
-
-        {/* --- DUAL LOGIN CARDS (The Main Focus) --- */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '30px', marginBottom: '60px' }}>
+          <p style={{ fontSize: '24px', marginBottom: '40px', opacity: 0.95 }}>
+            Your Digital Medical Records, Always With You
+          </p>
+          <p style={{ fontSize: '18px', marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px', opacity: 0.9 }}>
+            Store, manage, and share your medical records securely with QR code technology and AI-powered insights
+          </p>
           
-          {/* Patient Card */}
-          <div style={loginCard}>
-            <div style={{ ...iconHeader, background: '#ECFDF5' }}><User size={32} color="#10B981" /></div>
-            <h2 style={cardTitle}>Patient Portal</h2>
-            <p style={cardDesc}>Securely manage your personal medical records, view doctor notes, and generate sharing codes.</p>
-            <div style={featureList}>
-              <div style={checkItem}><Shield size={16} color="#10B981"/> Cloudinary Secure Storage</div>
-              <div style={checkItem}><Shield size={16} color="#10B981"/> AI Prescription Summary</div>
-            </div>
-            <button onClick={() => navigate('/patient/register')} style={patientBtn}>
-              Enter Patient Dashboard <ArrowRight size={18} />
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => navigate('/register')}
+              style={{
+                padding: '16px 32px',
+                fontSize: '18px',
+                fontWeight: '600',
+                background: 'white',
+                color: '#667eea',
+                border: 'none',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'transform 0.2s'
+              }}
+              onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
+              onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+            >
+              Get Started as Patient
+              <ArrowRight size={20} />
+            </button>
+            
+            <button
+              onClick={() => navigate('/doctor/register')}
+              style={{
+                padding: '16px 32px',
+                fontSize: '18px',
+                fontWeight: '600',
+                background: 'rgba(255,255,255,0.2)',
+                color: 'white',
+                border: '2px solid white',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'transform 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'rgba(255,255,255,0.3)';
+                e.target.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'rgba(255,255,255,0.2)';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              <Stethoscope size={20} />
+              I'm a Doctor
             </button>
           </div>
 
-          {/* Doctor Card */}
-          <div style={loginCard}>
-            <div style={{ ...iconHeader, background: '#F1F5F9' }}><Stethoscope size={32} color="#475569" /></div>
-            <h2 style={cardTitle}>Doctor Portal</h2>
-            <p style={cardDesc}>Scan patient QR codes to access medical history and add digital prescriptions or visit notes.</p>
-            <div style={featureList}>
-              <div style={checkItem}><Shield size={16} color="#475569"/> Instant QR Scanning</div>
-              <div style={checkItem}><Shield size={16} color="#475569"/> Digital Note Syncing</div>
-            </div>
-            <button onClick={() => navigate('/doctor/register')} style={doctorBtn}>
-              Enter Doctor Portal <ArrowRight size={18} />
+          <div style={{ marginTop: '24px', display: 'flex', gap: '24px', justifyContent: 'center' }}>
+            <button
+              onClick={() => navigate('/login')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'white',
+                fontSize: '16px',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                opacity: 0.9
+              }}
+            >
+              Patient Login
+            </button>
+            <span style={{ color: 'white', opacity: 0.5 }}>|</span>
+            <button
+              onClick={() => navigate('/doctor/login')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'white',
+                fontSize: '16px',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                opacity: 0.9
+              }}
+            >
+              Doctor Login
             </button>
           </div>
-
         </div>
       </header>
 
-      {/* --- BOTTOM FEATURE STRIP --- */}
-      <section style={{ background: '#FFFFFF', borderTop: '1px solid #EDF2F7', padding: '60px 40px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '40px' }}>
-          <div style={miniFeature}>
-            <Activity color="#10B981" />
-            <h4 style={miniTitle}>Live Sync</h4>
-            <p style={miniText}>Notes added by doctors appear instantly on the patient's mobile dashboard.</p>
-          </div>
-          <div style={miniFeature}>
-            <Database color="#10B981" />
-            <h4 style={miniTitle}>Cloud Secure</h4>
-            <p style={miniText}>End-to-end encrypted storage for all medical PDFs and image reports.</p>
-          </div>
-          <div style={miniFeature}>
-            <QrCode color="#10B981" />
-            <h4 style={miniTitle}>Quick Connect</h4>
-            <p style={miniText}>Zero-contact medical history sharing using auto-generated QR technology.</p>
+      {/* Features Section */}
+      <section style={{ padding: '80px 20px', background: 'white' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: '40px', fontWeight: '700', textAlign: 'center', marginBottom: '60px', color: '#1f2937' }}>
+            Why Choose HealthVault?
+          </h2>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px' }}>
+            <FeatureCard
+              icon={<Shield size={48} color="#667eea" />}
+              title="Secure & Private"
+              description="Your medical data is encrypted and never shared without your permission. Complete control over your health information."
+            />
+            
+            <FeatureCard
+              icon={<QrCode size={48} color="#667eea" />}
+              title="Easy QR Sharing"
+              description="Generate a QR code to instantly share your records with doctors. Simple, fast, and paperless."
+            />
+            
+            <FeatureCard
+              icon={<Sparkles size={48} color="#667eea" />}
+              title="AI-Powered Insights"
+              description="AI analyzes your medical reports and explains them in simple, easy-to-understand language."
+            />
+            
+            <FeatureCard
+              icon={<FileText size={48} color="#667eea" />}
+              title="All-in-One Storage"
+              description="Store prescriptions, lab reports, X-rays, visit notes, and complete medical history in one place."
+            />
+            
+            <FeatureCard
+              icon={<Heart size={48} color="#667eea" />}
+              title="Patient Controlled"
+              description="You choose what to share and how long doctors can view it. Your health, your choice."
+            />
+            
+            <FeatureCard
+              icon={<Stethoscope size={48} color="#667eea" />}
+              title="Doctor Friendly"
+              description="Doctors get instant access to complete medical history, enabling better care and faster decisions."
+            />
           </div>
         </div>
       </section>
+
+      {/* CTA Section */}
+      <section style={{ padding: '80px 20px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', textAlign: 'center' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: '40px', fontWeight: '700', marginBottom: '24px' }}>
+            Ready to Take Control of Your Health?
+          </h2>
+          <p style={{ fontSize: '20px', marginBottom: '40px', opacity: 0.9 }}>
+            Join thousands of patients and doctors using HealthVault for better healthcare management
+          </p>
+          <button
+            onClick={() => navigate('/register')}
+            style={{
+              padding: '18px 40px',
+              fontSize: '20px',
+              fontWeight: '600',
+              background: 'white',
+              color: '#667eea',
+              border: 'none',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              transition: 'transform 0.2s',
+              boxShadow: '0 8px 20px rgba(0,0,0,0.2)'
+            }}
+            onMouseEnter={(e) => e.target.style.transform = 'translateY(-4px)'}
+            onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+          >
+            Get Started Free
+          </button>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer style={{ padding: '40px 20px', background: '#1f2937', color: 'white', textAlign: 'center' }}>
+        <p style={{ margin: 0, opacity: 0.8 }}>
+          © 2026 HealthVault. Your medical records, always with you.
+        </p>
+      </footer>
     </div>
   );
 };
 
-// --- STYLES ---
-const promoBadge = { display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#DCFCE7', color: '#166534', padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: '700', marginBottom: '20px' };
-
-const loginCard = {
-  background: '#FFFFFF', padding: '48px', borderRadius: '24px', textAlign: 'left',
-  border: '1px solid #E2E8F0', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.03)',
-  display: 'flex', flexDirection: 'column', transition: 'transform 0.2s ease'
+const FeatureCard = ({ icon, title, description }) => {
+  return (
+    <div style={{
+      padding: '32px',
+      background: '#f9fafb',
+      borderRadius: '16px',
+      textAlign: 'center',
+      transition: 'transform 0.2s, box-shadow 0.2s',
+      cursor: 'default'
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.transform = 'translateY(-8px)';
+      e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.1)';
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.transform = 'translateY(0)';
+      e.currentTarget.style.boxShadow = 'none';
+    }}
+    >
+      <div style={{ marginBottom: '16px' }}>
+        {icon}
+      </div>
+      <h3 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '12px', color: '#1f2937' }}>
+        {title}
+      </h3>
+      <p style={{ color: '#6b7280', fontSize: '16px', lineHeight: '1.6', margin: 0 }}>
+        {description}
+      </p>
+    </div>
+  );
 };
-
-const iconHeader = { width: '64px', height: '64px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' };
-const cardTitle = { fontSize: '28px', fontWeight: '800', marginBottom: '12px', color: '#0F172A' };
-const cardDesc = { fontSize: '15px', color: '#64748B', lineHeight: '1.6', marginBottom: '24px', height: '45px' };
-const featureList = { marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '12px' };
-const checkItem = { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', fontWeight: '600', color: '#334155' };
-
-const patientBtn = { 
-  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-  width: '100%', padding: '16px', background: '#10B981', color: 'white', 
-  border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '700', cursor: 'pointer' 
-};
-
-const doctorBtn = { 
-  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-  width: '100%', padding: '16px', background: '#0F172A', color: 'white', 
-  border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '700', cursor: 'pointer' 
-};
-
-const miniFeature = { textAlign: 'left' };
-const miniTitle = { fontSize: '17px', fontWeight: '700', margin: '12px 0 8px', color: '#0F172A' };
-const miniText = { fontSize: '14px', color: '#64748B', lineHeight: '1.5' };
 
 export default LandingPage;

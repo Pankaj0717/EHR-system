@@ -27,8 +27,22 @@ export const AuthProvider = ({ children }) => {
 
   const loadUser = async () => {
     try {
+      // First check if user is stored locally
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+        setLoading(false);
+        return;
+      }
+
+      // If not, fetch from API
       const response = await authAPI.getProfile();
-      setUser(response.data.user);
+      const userData = response.data.user;
+      
+      // Save to state and localStorage
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      
     } catch (error) {
       console.error('Failed to load user:', error);
       logout();
@@ -42,7 +56,10 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.register(userData);
       const { token, user } = response.data;
       
+      // Save both token and user to localStorage
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user)); // ✅ ADDED THIS
+      
       setToken(token);
       setUser(user);
       
@@ -60,7 +77,10 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.login(credentials);
       const { token, user } = response.data;
       
+      // Save both token and user to localStorage
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user)); // ✅ ADDED THIS
+      
       setToken(token);
       setUser(user);
       
@@ -75,6 +95,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user'); // ✅ ADDED THIS
     setToken(null);
     setUser(null);
   };

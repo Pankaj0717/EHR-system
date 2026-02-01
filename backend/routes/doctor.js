@@ -1,94 +1,128 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
+const User = require('../models/User');
 const MedicalRecord = require('../models/MedicalRecord');
 const VisitNote = require('../models/VisitNote');
-const User = require('../models/User');
 
-// @desc    Verify QR code and get patient records
+// @desc    Verify QR code and get patient data
 // @route   POST /api/doctor/verify-qr
 // @access  Private (Doctor only)
 router.post('/verify-qr', protect, authorize('doctor'), async (req, res, next) => {
   try {
     const { qrData } = req.body;
-
+    
+    // Validate qrData is provided
     if (!qrData) {
       return res.status(400).json({
         success: false,
-        message: 'QR code data is required'
+        message: 'QR data is required'
       });
     }
-
-    // Parse QR data
-    let parsedData;
+    
+    console.log('🔍 Verifying QR code...');
+    
+    // Parse QR data - handle both JSON string and plain ID
+    let patientId;
     try {
-      parsedData = JSON.parse(qrData);
-    } catch (error) {
+      const parsed = JSON.parse(qrData);
+      patientId = parsed.userId || parsed.id;
+      console.log('Parsed patient ID from JSON:', patientId);
+    } catch (err) {
+      // If not JSON, assume it's just the patient ID
+      patientId = qrData;
+      console.log('Using raw patient ID:', patientId);
+    }
+
+    if (!patientId) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid QR code format'
+        message: 'Invalid QR code data'
       });
     }
 
-    const { userId, timestamp, expiresIn } = parsedData;
+    // Get patient info
+    const patient = await User.findById(patientId);
 
-    // Check if QR code is expired (30 minutes)
-    const expiryTime = timestamp + expiresIn;
-    if (Date.now() > expiryTime) {
-      return res.status(401).json({
-        success: false,
-        message: 'QR code has expired. Please ask patient to generate a new one.'
-      });
-    }
-
-    // Get patient details
-    const patient = await User.findById(userId).select('-password');
-    
     if (!patient) {
+      console.log('❌ Patient not found with ID:', patientId);
       return res.status(404).json({
         success: false,
         message: 'Patient not found'
       });
     }
 
+    if (patient.role !== 'patient') {
+      console.log('❌ User is not a patient, role:', patient.role);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid patient QR code'
+      });
+    }
+
+    console.log('✅ Patient found:', patient.name);
+
     // Get patient's medical records
-    const records = await MedicalRecord.find({ userId })
+    const records = await MedicalRecord.find({ userId: patientId })
       .sort({ uploadDate: -1 });
 
-    // Get previous visit notes by this doctor
-    const visitNotes = await VisitNote.find({ 
-      patientId: userId,
-      doctorId: req.user._id 
-    })
-    .sort({ visitDate: -1 })
-    .limit(10);
+    // Get patient's visit notes
+    const visitNotes = await VisitNote.find({ patientId })
+      .populate('doctorId', 'name specialization hospitalName')
+      .sort({ visitDate: -1 });
+
+    console.log('✅ Found', records.length, 'records and', visitNotes.length, 'visit notes');
 
     res.json({
       success: true,
-      patient,
-      records,
-      visitNotes,
-      accessGrantedAt: new Date()
+      data: {
+        patient: {
+          _id: patient._id,
+          id: patient._id,
+          name: patient.name,
+          phone: patient.phone,
+          email: patient.email,
+          dateOfBirth: patient.dateOfBirth,
+          gender: patient.gender,
+          bloodGroup: patient.bloodGroup,
+          address: patient.address
+        },
+        records: records,
+        visitNotes: visitNotes,
+        recordCount: records.length
+      }
     });
+
   } catch (error) {
+    console.error('❌ QR Verification error:', error);
     next(error);
   }
 });
 
-// @desc    Get patient records by patient ID
-// @route   GET /api/doctor/patient/:patientId/records
+// @desc    Get patient by ID (direct access)
+// @route   GET /api/doctor/patient/:id
 // @access  Private (Doctor only)
-router.get('/patient/:patientId/records', protect, authorize('doctor'), async (req, res, next) => {
+router.get('/patient/:id', protect, authorize('doctor'), async (req, res, next) => {
   try {
-    const { patientId } = req.params;
-
-    // Get patient details
-    const patient = await User.findById(patientId).select('-password');
+    const patientId = req.params.id;
     
+    console.log('🔍 Fetching patient by ID:', patientId);
+
+    // Get patient info
+    const patient = await User.findById(patientId);
+
     if (!patient) {
+      console.log('❌ Patient not found');
       return res.status(404).json({
         success: false,
         message: 'Patient not found'
+      });
+    }
+
+    if (patient.role !== 'patient') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid patient ID'
       });
     }
 
@@ -96,12 +130,35 @@ router.get('/patient/:patientId/records', protect, authorize('doctor'), async (r
     const records = await MedicalRecord.find({ userId: patientId })
       .sort({ uploadDate: -1 });
 
+    // Get patient's visit notes
+    const visitNotes = await VisitNote.find({ patientId })
+      .populate('doctorId', 'name specialization hospitalName')
+      .sort({ visitDate: -1 });
+
+    console.log('✅ Found patient:', patient.name);
+
     res.json({
       success: true,
-      patient,
-      records
+      data: {
+        patient: {
+          _id: patient._id,
+          id: patient._id,
+          name: patient.name,
+          phone: patient.phone,
+          email: patient.email,
+          dateOfBirth: patient.dateOfBirth,
+          gender: patient.gender,
+          bloodGroup: patient.bloodGroup,
+          address: patient.address
+        },
+        records: records,
+        visitNotes: visitNotes,
+        recordCount: records.length
+      }
     });
+
   } catch (error) {
+    console.error('❌ Error fetching patient:', error);
     next(error);
   }
 });
@@ -121,9 +178,11 @@ router.post('/visit-note', protect, authorize('doctor'), async (req, res, next) 
       notes
     } = req.body;
 
-    // Validate patient exists
+    console.log('📝 Adding visit note for patient:', patientId);
+
+    // Verify patient exists
     const patient = await User.findById(patientId);
-    if (!patient) {
+    if (!patient || patient.role !== 'patient') {
       return res.status(404).json({
         success: false,
         message: 'Patient not found'
@@ -137,125 +196,45 @@ router.post('/visit-note', protect, authorize('doctor'), async (req, res, next) 
       diagnosis,
       symptoms,
       prescription,
-      medicines,
+      medicines: medicines || [],
       nextVisitDate,
       notes
     });
 
-    // Populate doctor and patient details
+    // Populate doctor info
     await visitNote.populate('doctorId', 'name specialization hospitalName');
-    await visitNote.populate('patientId', 'name phone email');
+
+    console.log('✅ Visit note created successfully');
 
     res.status(201).json({
       success: true,
       message: 'Visit note added successfully',
       visitNote
     });
+
   } catch (error) {
+    console.error('❌ Error adding visit note:', error);
     next(error);
   }
 });
 
-// @desc    Get all visit notes by doctor
-// @route   GET /api/doctor/visit-notes
+// @desc    Get doctor's own visit notes
+// @route   GET /api/doctor/my-visit-notes
 // @access  Private (Doctor only)
-router.get('/visit-notes', protect, authorize('doctor'), async (req, res, next) => {
+router.get('/my-visit-notes', protect, authorize('doctor'), async (req, res, next) => {
   try {
     const visitNotes = await VisitNote.find({ doctorId: req.user._id })
       .populate('patientId', 'name phone email')
-      .sort({ visitDate: -1 })
-      .limit(50);
+      .sort({ visitDate: -1 });
 
     res.json({
       success: true,
       count: visitNotes.length,
       visitNotes
     });
+
   } catch (error) {
-    next(error);
-  }
-});
-
-// @desc    Get visit notes for specific patient
-// @route   GET /api/doctor/patient/:patientId/visit-notes
-// @access  Private (Doctor only)
-router.get('/patient/:patientId/visit-notes', protect, authorize('doctor'), async (req, res, next) => {
-  try {
-    const { patientId } = req.params;
-
-    const visitNotes = await VisitNote.find({ 
-      patientId,
-      doctorId: req.user._id 
-    })
-    .sort({ visitDate: -1 });
-
-    res.json({
-      success: true,
-      count: visitNotes.length,
-      visitNotes
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// @desc    Update visit note
-// @route   PUT /api/doctor/visit-note/:id
-// @access  Private (Doctor only)
-router.put('/visit-note/:id', protect, authorize('doctor'), async (req, res, next) => {
-  try {
-    let visitNote = await VisitNote.findOne({
-      _id: req.params.id,
-      doctorId: req.user._id
-    });
-
-    if (!visitNote) {
-      return res.status(404).json({
-        success: false,
-        message: 'Visit note not found'
-      });
-    }
-
-    visitNote = await VisitNote.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-
-    res.json({
-      success: true,
-      message: 'Visit note updated successfully',
-      visitNote
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// @desc    Delete visit note
-// @route   DELETE /api/doctor/visit-note/:id
-// @access  Private (Doctor only)
-router.delete('/visit-note/:id', protect, authorize('doctor'), async (req, res, next) => {
-  try {
-    const visitNote = await VisitNote.findOne({
-      _id: req.params.id,
-      doctorId: req.user._id
-    });
-
-    if (!visitNote) {
-      return res.status(404).json({
-        success: false,
-        message: 'Visit note not found'
-      });
-    }
-
-    await visitNote.deleteOne();
-
-    res.json({
-      success: true,
-      message: 'Visit note deleted successfully'
-    });
-  } catch (error) {
+    console.error('❌ Error fetching visit notes:', error);
     next(error);
   }
 });
